@@ -1,0 +1,8 @@
+.env
+__pycache__/
+node_modules/
+KMS/
+venv/
+uvicorn.log
+agent.log
+
