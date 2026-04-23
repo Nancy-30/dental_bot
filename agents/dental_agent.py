@@ -46,12 +46,6 @@ _filler_booking = _FillerRotator([
     "One moment while I confirm your appointment.",
     "Let me lock that in for you.",
 ])
-_filler_capture = _FillerRotator([
-    "Got it, noting that down.",
-    "Sure, let me record that.",
-    "Alright, I have that saved.",
-    "Perfect, noted.",
-])
 
 
 class DentalAgent(Agent):
@@ -124,26 +118,9 @@ class DentalAgent(Agent):
         preferred_time: str = "",
         insurance_name: str = "",
     ) -> str:
-        """Save patient information as soon as it is shared during the call.
-
-        Call this incrementally — pass whatever fields you have. Missing fields
-        default to empty string and will not overwrite existing data.
-
-        Args:
-            name:             Patient's full name.
-            dob:              Date of birth in any format (e.g. "May 10, 1998").
-            reason_for_visit: Reason for the appointment (e.g. "tooth pain", "cleaning").
-            preferred_time:   Preferred appointment date/time (e.g. "tomorrow morning").
-            insurance_name:   Insurance provider name (e.g. "Delta Dental"). Optional.
-        """
+        """Save any patient detail the moment it is shared. Pass only known fields; leave others empty."""
         if not any((name, dob, reason_for_visit, preferred_time, insurance_name)):
             return "Nothing to save — no patient information provided."
-
-        await context.session.say(
-            _filler_capture.next(),
-            allow_interruptions=True,
-            add_to_chat_ctx=False,
-        )
 
         self.patient_memory.update(
             name=name,
@@ -198,18 +175,7 @@ class DentalAgent(Agent):
         preferred_time: str = "",
         insurance_name: str = "",
     ) -> str:
-        """Confirm and record an appointment booking.
-
-        Call this only when you have collected name, dob, reason_for_visit, and
-        preferred_time. Insurance is optional.
-
-        Args:
-            name:             Patient's full name.
-            dob:              Date of birth.
-            reason_for_visit: Reason for the appointment.
-            preferred_time:   Preferred appointment date/time.
-            insurance_name:   Insurance provider (optional).
-        """
+        """Confirm the appointment. Call only when name, dob, reason_for_visit, and preferred_time are all known. Insurance optional."""
         # Merge with memory in case some fields were captured earlier
         mem = self.patient_memory
         final_name = name or mem.name
@@ -272,11 +238,7 @@ class DentalAgent(Agent):
         context: RunContext,
         topic: str = "general",
     ) -> str:
-        """Get static clinic information to answer patient FAQs.
-
-        Args:
-            topic: One of "hours", "address", "insurance", "services", "emergency", "general".
-        """
+        """Clinic FAQ. topic: hours, address, insurance, services, emergency, general."""
         await context.session.say(
             _filler_lookup.next(),
             allow_interruptions=True,
@@ -323,11 +285,7 @@ class DentalAgent(Agent):
 
     @function_tool()
     async def escalate_call(self, context: RunContext) -> str:
-        """Escalate the call to a human staff member.
-
-        Call this when the patient is in distress, has an emergency, or requests
-        to speak with a human. Say your handoff line BEFORE calling this tool.
-        """
+        """Transfer to human staff. Say the handoff line first, then call this."""
         logger.info(
             "Tool: escalate_call — conv=%s", self.patient_memory.conversation_id
         )
@@ -342,11 +300,7 @@ class DentalAgent(Agent):
 
     @function_tool()
     async def end_call(self, context: RunContext) -> str:
-        """End the call after saying farewell.
-
-        Call this AFTER you have spoken your goodbye message and the patient
-        is clearly done with the conversation.
-        """
+        """Hang up. Call AFTER speaking a goodbye line."""
         logger.info(
             "Tool: end_call — conv=%s", self.patient_memory.conversation_id
         )
