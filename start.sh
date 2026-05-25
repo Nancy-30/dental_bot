@@ -119,7 +119,7 @@ step 6 "Starting FastAPI backend  →  http://localhost:7000"
 
 python -m uvicorn backend.main:app \
     --host 0.0.0.0 \
-    --port 7000 \
+    --port ${PORT:-7000} \
     --log-level info 2>&1 | \
     while IFS= read -r line; do
         echo -e "${CYAN}[BACKEND]${RST} $line"
